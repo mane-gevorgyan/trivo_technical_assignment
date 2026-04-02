@@ -17,20 +17,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 2,
     support_email: "marcus.reed@support.trivo.app",
     timezone: "Europe/Warsaw",
-    allowed_channels: [
-      {
-        label: "Email",
-        value: "email",
-      },
-      {
-        label: "SMS",
-        value: "sms",
-      },
-      {
-        label: "Push Notifications",
-        value: "push",
-      },
-    ],
+    allowed_channels: ["email", "sms", "push"],
   },
   {
     id: "cb77de79-7710-479c-9183-31b9d1b3f79e",
@@ -39,12 +26,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 3,
     support_email: "sofia.collins@support.trivo.app",
     timezone: "Asia/Chongqing",
-    allowed_channels: [
-      {
-        label: "Email",
-        value: "email",
-      },
-    ],
+    allowed_channels: ["email"],
   },
   {
     id: "0bd8b332-6cc4-45c1-a923-f80aba0ee049",
@@ -62,16 +44,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 5,
     support_email: "ava.thompson@support.trivo.app",
     timezone: "America/Montreal",
-    allowed_channels: [
-      {
-        label: "Email",
-        value: "email",
-      },
-      {
-        label: "Push Notifications",
-        value: "push",
-      },
-    ],
+    allowed_channels: ["email", "push"],
   },
   {
     id: "6cdf3aa5-3a81-43ca-be96-bc93db3cf7e3",
@@ -80,12 +53,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 6,
     support_email: "liam.carter@support.trivo.app",
     timezone: "Europe/Oslo",
-    allowed_channels: [
-      {
-        label: "Push Notifications",
-        value: "push",
-      },
-    ],
+    allowed_channels: ["push"],
   },
   {
     id: "4bf3775b-ee9c-4dd4-b346-08646f6ee075",
@@ -103,28 +71,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 8,
     support_email: "noah.mitchell@support.trivo.app",
     timezone: "Asia/Tokyo",
-    allowed_channels: [
-      {
-        label: "Email",
-        value: "email",
-      },
-      {
-        label: "SMS",
-        value: "sms",
-      },
-      {
-        label: "Push Notifications",
-        value: "push",
-      },
-      {
-        label: "In-App Messages",
-        value: "in_app",
-      },
-      {
-        label: "Whatsapp",
-        value: "whatsapp",
-      },
-    ],
+    allowed_channels: ["email", "sms", "push", "in_app", "whatsapp"],
   },
   {
     id: "464d52b8-7350-4d8b-9595-0ca720c2da68",
@@ -133,28 +80,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 9,
     support_email: "isabella.hayes@support.trivo.app",
     timezone: "Asia/Jakarta",
-    allowed_channels: [
-      {
-        label: "Email",
-        value: "email",
-      },
-      {
-        label: "SMS",
-        value: "sms",
-      },
-      {
-        label: "Push Notifications",
-        value: "push",
-      },
-      {
-        label: "In-App Messages",
-        value: "in_app",
-      },
-      {
-        label: "Whatsapp",
-        value: "whatsapp",
-      },
-    ],
+    allowed_channels: ["email", "sms", "push", "in_app", "whatsapp"],
   },
   {
     id: "323d4708-d42f-4290-97af-1519670a59c1",
@@ -172,20 +98,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 11,
     support_email: "mia.richardson@support.trivo.app",
     timezone: "Asia/Tokyo",
-    allowed_channels: [
-      {
-        label: "Email",
-        value: "email",
-      },
-      {
-        label: "SMS",
-        value: "sms",
-      },
-      {
-        label: "Push Notifications",
-        value: "push",
-      },
-    ],
+    allowed_channels: ["email", "sms", "push"],
   },
   {
     id: "3f7237a9-ff26-41fa-9c47-16c30d78e910",
@@ -194,28 +107,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 12,
     support_email: "james.cooper@support.trivo.app",
     timezone: "Europe/Warsaw",
-    allowed_channels: [
-      {
-        label: "Email",
-        value: "email",
-      },
-      {
-        label: "SMS",
-        value: "sms",
-      },
-      {
-        label: "Push Notifications",
-        value: "push",
-      },
-      {
-        label: "In-App Messages",
-        value: "in_app",
-      },
-      {
-        label: "Whatsapp",
-        value: "whatsapp",
-      },
-    ],
+    allowed_channels: ["email", "sms", "push", "in_app", "whatsapp"],
   },
   {
     id: "960f24e7-9770-4ff5-8572-5d4d9db1ec4d",
@@ -224,28 +116,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 13,
     support_email: "charlotte.murphy@support.trivo.app",
     timezone: "Indian/Mauritius",
-    allowed_channels: [
-      {
-        label: "Email",
-        value: "email",
-      },
-      {
-        label: "SMS",
-        value: "sms",
-      },
-      {
-        label: "Push Notifications",
-        value: "push",
-      },
-      {
-        label: "In-App Messages",
-        value: "in_app",
-      },
-      {
-        label: "Whatsapp",
-        value: "whatsapp",
-      },
-    ],
+    allowed_channels: ["email", "sms", "push", "in_app", "whatsapp"],
   },
   {
     id: "a772f992-60ec-4319-b99a-94b072522610",
@@ -254,28 +125,7 @@ export const MOCK_ACCOUNTS: FullAccountData[] = [
     daily_email_limit: 14,
     support_email: "benjamin.ward@support.trivo.app",
     timezone: "Asia/Tokyo",
-    allowed_channels: [
-      {
-        label: "Email",
-        value: "email",
-      },
-      {
-        label: "SMS",
-        value: "sms",
-      },
-      {
-        label: "Push Notifications",
-        value: "push",
-      },
-      {
-        label: "In-App Messages",
-        value: "in_app",
-      },
-      {
-        label: "Whatsapp",
-        value: "whatsapp",
-      },
-    ],
+    allowed_channels: ["email", "sms", "push", "in_app", "whatsapp"],
   },
 ];
 

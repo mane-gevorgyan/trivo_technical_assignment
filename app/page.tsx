@@ -1,4 +1,4 @@
-import ButtonComponent from "./components/ui/button";
+import ButtonComponent from "./components/ui/Button";
 
 const Home = () => {
   return (

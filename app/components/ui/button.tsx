@@ -7,11 +7,19 @@ import Link from "next/link";
 type ButtonComponentProps = ButtonProps<"button"> & {
   href?: string;
   children: React.ReactNode;
+  onClick?: ButtonProps<"button">["onClick"];
 };
 
 const ButtonComponent = forwardRef<HTMLButtonElement, ButtonComponentProps>(
   function ButtonComponent(
-    { href, children, variant = "contained", color = "primary", ...props },
+    {
+      href,
+      children,
+      onClick,
+      variant = "contained",
+      color = "primary",
+      ...props
+    },
     ref,
   ) {
     if (href) {
@@ -19,6 +27,7 @@ const ButtonComponent = forwardRef<HTMLButtonElement, ButtonComponentProps>(
         <Button
           component={Link}
           href={href}
+          onClick={onClick}
           variant={variant}
           color={color}
           {...props}
@@ -29,7 +38,13 @@ const ButtonComponent = forwardRef<HTMLButtonElement, ButtonComponentProps>(
     }
 
     return (
-      <Button ref={ref} variant={variant} color={color} {...props}>
+      <Button
+        ref={ref}
+        onClick={onClick}
+        variant={variant}
+        color={color}
+        {...props}
+      >
         {children}
       </Button>
     );
