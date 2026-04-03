@@ -72,9 +72,29 @@ npx tsc --noEmit
 app/
   components/
     form/
+      AccountSettingEditor.tsx
+      AccountSettingField.tsx
+      AccountSettingsActions.tsx
+      AccountSettingsForm.tsx
+      AccountSettingsLoading.tsx
+      AccountSettingsPanel.tsx
     ui/
+      AccountSidebar.tsx
+      Button.tsx
+      SidebarListItem.tsx
   dashboard/
+    [accountId]/
+      loading.tsx
+      page.tsx
+    layout.tsx
+    page.tsx
   hooks/
+    useAccountSettings.ts
+    useAccountSettingsLoading.ts
+    useAccountSettingValidation.ts
+    useIsHydrated.ts
+  layout.tsx
+  page.tsx
 config/
   accountSettings.ts
   mockData.ts
@@ -107,3 +127,28 @@ For a brand new field type such as `date`, also extend:
 - The runtime source of truth in this version is `localStorage`.
 - The UI adapts automatically for new settings of already supported field types.
 - New field types require renderer support, which is an intentional tradeoff for this scope.
+
+## AI Usage Note
+
+- Tools used:
+  - OpenAI Codex / ChatGPT-style coding assistance
+- What they were used for:
+  - small implementation suggestions
+  - review support
+  - documentation phrasing and refinement
+  - sanity-checking extension paths for new settings and validation
+- Primarily my own implementation and decisions:
+  - structuring the frontend implementation around the assignment requirements
+  - translating the required schema-driven form idea into the actual component and hook structure
+  - implementing how the supported field types are rendered and validated in the UI
+  - deciding how save-time validation should fit into the existing reusable form structure
+  - organizing the code and documentation so the extension points are clear
+- Review and modification:
+  - most of the implementation and writing were done by me
+  - any AI-generated suggestions or code were reviewed carefully and adjusted before being used
+  - AI output was used only as support, not as the source of architectural or product decisions
+- Representative prompt workflows:
+  - review this form implementation and suggest small improvements
+  - help add save-time validation without breaking the schema-driven approach
+  - suggest a cleaner way to refactor validation logic into a reusable hook
+  - help refine README and approach-note wording for the submission
