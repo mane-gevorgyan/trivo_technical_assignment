@@ -16,6 +16,8 @@ type BaseSettingDefinition<
   key: K;
   label: string;
   description?: string;
+  required?: boolean;
+  requiredMessage?: string;
   options?: SettingOption<T>[];
 };
 
@@ -27,12 +29,16 @@ type BooleanSettingDefinition<K extends keyof IAccountSettings> =
 type TextSettingDefinition<K extends keyof IAccountSettings> =
   BaseSettingDefinition<K, never> & {
     type: "text";
+    inputType?: "text" | "email";
     placeholder?: string;
+    pattern?: RegExp;
+    patternMessage?: string;
   };
 
 type NumberSettingDefinition<K extends keyof IAccountSettings> =
   BaseSettingDefinition<K, never> & {
     type: "number";
+    integer?: boolean;
     min?: number;
     max?: number;
     suffix?: string;
@@ -94,13 +100,19 @@ export const ACCOUNT_SETTINGS_SCHEMA: AccountSettingDefinition[] = [
     label: "Support Email",
     description: "Primary support address used for account communication.",
     type: "text",
+    required: true,
+    inputType: "email",
     placeholder: "support@example.com",
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    patternMessage: "Enter a valid email address.",
   },
   {
     key: "daily_email_limit",
     label: "Daily Email Limit",
     description: "Maximum number of automated emails sent per day.",
     type: "number",
+    required: true,
+    integer: true,
     min: 0,
     suffix: "per day",
   },
@@ -109,6 +121,7 @@ export const ACCOUNT_SETTINGS_SCHEMA: AccountSettingDefinition[] = [
     label: "Timezone",
     description: "Timezone used to schedule notifications and digests.",
     type: "select",
+    required: true,
     options: TIMEZONE_OPTIONS,
   },
   {

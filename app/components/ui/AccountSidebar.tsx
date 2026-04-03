@@ -7,7 +7,7 @@ const AccountSidebar = () => {
     <List
       aria-label="Accounts"
       sx={{
-        maxHeight: "70vh",
+        maxHeight: "93vh",
         overflowY: "auto",
         scrollbarWidth: "none",
         pr: 1,

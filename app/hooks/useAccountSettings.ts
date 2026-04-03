@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
@@ -63,9 +61,11 @@ export const useAccountSettings = (account: FullAccountData) => {
 
   const form = useForm<IAccountSettings>({
     defaultValues: initialClientSettings,
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
 
-  const { control, getValues, reset } = form;
+  const { control, handleSubmit, reset } = form;
   const watchedValues = useWatch({
     control,
   });
@@ -80,9 +80,7 @@ export const useAccountSettings = (account: FullAccountData) => {
     setIsEditing(false);
   };
 
-  const saveSettings = async () => {
-    const nextSettings = getValues();
-
+  const saveSettings = handleSubmit(async (nextSettings) => {
     setIsSaving(true);
     await new Promise((resolve) =>
       window.setTimeout(resolve, SIMULATED_SAVE_DELAY_MS)
@@ -97,7 +95,7 @@ export const useAccountSettings = (account: FullAccountData) => {
     reset(nextSettings);
     setIsSaving(false);
     setIsEditing(false);
-  };
+  });
 
   return {
     control,
