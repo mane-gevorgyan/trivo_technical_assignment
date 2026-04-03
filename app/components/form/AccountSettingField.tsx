@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, Chip, Stack, Switch, Typography } from "@mui/material";
 import type { Control } from "react-hook-form";
 

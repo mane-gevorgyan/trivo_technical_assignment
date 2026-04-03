@@ -123,6 +123,46 @@ The implementation supports all required setting types:
 
 The field renderer handles these types generically, which means adding a new setting of an existing type does not require new field-specific JSX.
 
+## Where To Change Things When Adding Settings
+
+The implementation is meant to support adding new settings in code rather than wiring each one manually in JSX.
+
+For a new setting of an already supported type, the main update points are:
+
+- [types/account.ts](types/account.ts)
+  - add the field to `IAccountSettings`
+  - add a union type if the setting introduces new select-like values
+- [config/accountSettings.ts](config/accountSettings.ts)
+  - add the field definition to `ACCOUNT_SETTINGS_SCHEMA`
+  - define options and validation metadata there when needed
+- [config/mockData.ts](config/mockData.ts)
+  - add the field value for each mocked account
+- [app/hooks/useAccountSettings.ts](app/hooks/useAccountSettings.ts)
+  - include the field in `extractSettings`
+
+Once those changes are made, the UI adapts automatically because:
+
+- [app/components/form/AccountSettingsForm.tsx](app/components/form/AccountSettingsForm.tsx) renders by iterating over the schema
+- [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx) handles supported field types generically
+- [app/components/form/AccountSettingField.tsx](app/components/form/AccountSettingField.tsx) handles supported read-only rendering generically
+- [app/hooks/useAccountSettingValidation.ts](app/hooks/useAccountSettingValidation.ts) builds validation rules from schema metadata
+
+Example:
+
+- adding a new `language` setting of type `select` only requires changes to the settings type, schema, mock data, and extracted settings shape
+- no new form-specific JSX is needed for that case
+
+If a completely new field type is introduced, for example `date`, then the renderer must also be extended. In that case, update:
+
+- [config/accountSettings.ts](config/accountSettings.ts)
+  - add the new setting-definition type and schema entry
+- [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx)
+  - add edit-mode support for the new type
+- [app/components/form/AccountSettingField.tsx](app/components/form/AccountSettingField.tsx)
+  - add read-only rendering for the new type
+- [app/hooks/useAccountSettingValidation.ts](app/hooks/useAccountSettingValidation.ts)
+  - add validation behavior if the new type needs type-specific rules
+
 ## Loading and Async Behavior
 
 To make the experience closer to a real application, the implementation includes simulated asynchronous behavior:

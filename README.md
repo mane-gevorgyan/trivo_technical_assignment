@@ -82,6 +82,37 @@ These cover the assignment examples:
 - Timezone
 - Allowed channels
 
+## Adding New Settings
+
+If the new field uses an already supported type like `boolean`, `text`, `number`, `select`, or `multiselect`, the UI will adapt automatically after updating the code-defined settings model.
+
+For a new field of an existing supported type, update these places:
+
+- [types/account.ts](types/account.ts)
+  - add the field to `IAccountSettings`
+  - add any new union types if the field is a `select` or `multiselect`
+- [config/accountSettings.ts](config/accountSettings.ts)
+  - add the setting definition to `ACCOUNT_SETTINGS_SCHEMA`
+  - add options and validation metadata like `required`, `pattern`, `min`, `max`, or `inputType` if needed
+- [config/mockData.ts](config/mockData.ts)
+  - add a value for the new field to each mocked account
+- [app/hooks/useAccountSettings.ts](app/hooks/useAccountSettings.ts)
+  - include the new field in `extractSettings`
+
+Example:
+
+- adding a new `language` select field only requires updating the settings type, schema, mock data, and extracted settings shape
+- the form rendering, read-only display, and validation then follow automatically because those are schema-driven for supported field types
+
+If the new field introduces a brand new type such as `date`, the schema alone is not enough. In that case, also extend:
+
+- [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx)
+  - add edit-mode rendering for the new type
+- [app/components/form/AccountSettingField.tsx](app/components/form/AccountSettingField.tsx)
+  - add read-only rendering for the new type
+- [app/hooks/useAccountSettingValidation.ts](app/hooks/useAccountSettingValidation.ts)
+  - add validation behavior for the new type if needed
+
 ## Project Structure
 
 ```

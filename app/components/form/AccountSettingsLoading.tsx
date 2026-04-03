@@ -1,5 +1,3 @@
-"use client";
-
 import { Paper, Skeleton, Stack } from "@mui/material";
 import { useAccountSettingsLoading } from "@/app/hooks/useAccountSettingsLoading";
 
