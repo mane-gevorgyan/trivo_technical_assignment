@@ -1,226 +1,112 @@
 # Approach Note
 
-## Objective
+## Goal
 
-The assignment is centered on reusability and adaptability, so the main goal of the implementation was to avoid building a one-off settings form. Instead, the goal was to create a small settings system where:
+The assignment emphasizes reusability and adaptability, so the implementation was designed as a small settings system rather than a page with hardcoded fields.
 
-- settings are described in code
-- the UI is generated from that description
-- each account can manage and persist its own values
+The main goals were:
 
-## Main Design Decision
+- keep settings defined in code
+- render the UI from that code-defined schema
+- support account-specific state and persistence
+- make supported settings easy to add without rewriting form JSX
 
-The most important design decision is the schema-driven settings model in:
+## Core Design Choice
+
+The central decision is the schema-driven model in:
 
 - [config/accountSettings.ts](config/accountSettings.ts)
 
-That schema defines each setting’s:
+That schema is the source of truth for:
 
-- key
-- label
-- description
+- setting keys
+- labels and descriptions
 - field type
-- options
-- extra metadata such as placeholder, min, max, and suffix
+- options for select-like fields
+- metadata such as placeholders, numeric limits, input type, and validation rules
 
-The settings UI is then built by iterating over this schema rather than hardcoding each field. This makes the system flexible and much easier to extend.
+Instead of building separate JSX for each setting, the form iterates over that schema and renders the appropriate field. This keeps the implementation smaller, more consistent, and easier to extend.
 
-## Why This Matters
+## Architecture
 
-Without a schema, the implementation would likely end up with custom JSX for each setting:
+### Data shape
 
-- one block for notifications
-- another block for timezone
-- another block for support email
-
-That approach becomes repetitive quickly and makes future changes harder. In this implementation, the schema is the source of truth, and the form rendering logic follows it.
-
-## Data Model
-
-The domain types live in:
+The domain model is defined in:
 
 - [types/account.ts](types/account.ts)
 
-There are two important aspects here:
+The key separation is:
 
-1. The account has simple identity fields:
-   - `id`
-   - `name`
+- account identity: `id`, `name`
+- account settings: reusable settings fields grouped in `IAccountSettings`
 
-2. The account settings are separated into a reusable settings shape:
-   - `notifications`
-   - `support_email`
-   - `daily_email_limit`
-   - `timezone`
-   - `allowed_channels`
+That allows the rendering logic to work with a predictable settings object rather than unrelated account metadata.
 
-This keeps the rendering logic focused on a settings model rather than on unrelated account metadata.
+### Rendering flow
 
-## Rendering Structure
+The main rendering flow is:
 
-The account settings page is split into layers:
+1. [app/dashboard/[accountId]/page.tsx](app/dashboard/%5BaccountId%5D/page.tsx) loads the selected account
+2. [app/components/form/AccountSettingsForm.tsx](app/components/form/AccountSettingsForm.tsx) iterates through `ACCOUNT_SETTINGS_SCHEMA`
+3. [app/components/form/AccountSettingField.tsx](app/components/form/AccountSettingField.tsx) decides between read-only and edit mode
+4. [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx) renders the correct control for the field type
 
-### Server Layer
+This is what makes the UI adaptive for supported types.
 
-- [app/dashboard/[accountId]/page.tsx](app/dashboard/[accountId]/page.tsx)
-- [app/components/form/AccountSettingsPanel.tsx](app/components/form/AccountSettingsPanel.tsx)
+### Form state and persistence
 
-These are server-rendered and handle the route-level page shell plus account lookup.
-
-### Client Layer
-
-- [app/components/form/AccountSettingsForm.tsx](app/components/form/AccountSettingsForm.tsx)
-- [app/components/form/AccountSettingField.tsx](app/components/form/AccountSettingField.tsx)
-- [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx)
-- [app/components/form/AccountSettingsActions.tsx](app/components/form/AccountSettingsActions.tsx)
-
-These components handle interactivity, editing, and form binding.
-
-This split keeps the client boundary smaller while still allowing the local interactive behavior needed by the assignment.
-
-## React Hook Form
-
-The assignment explicitly asks for React Hook Form, so the editable form state is managed with it in:
+Form state is handled in:
 
 - [app/hooks/useAccountSettings.ts](app/hooks/useAccountSettings.ts)
 
-This hook is responsible for:
+That hook is responsible for:
 
-- initializing form values
-- keeping track of saved values
-- handling edit mode
-- handling save progress
-- persisting values to `localStorage`
+- extracting the editable settings shape from an account
+- initializing React Hook Form
+- tracking edit mode
+- handling cancel/save behavior
+- persisting account-specific values in `localStorage`
 
-The individual form controls are bound dynamically with `Controller` in:
+Validation rules are derived from schema metadata in:
 
-- [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx)
-
-That allows the form to remain schema-driven while still using React Hook Form correctly.
-
-## Persistence Strategy
-
-Persistence is implemented with `localStorage`, which is acceptable under the assignment’s “simple approach” requirement.
-
-Why `localStorage`:
-
-- no backend was required
-- it keeps the project lightweight
-- it allows per-account persistence
-- it is easy to demonstrate independently in a frontend-only assignment
-
-Each account’s settings are stored independently using a key derived from account id.
-
-## Supported Field Types
-
-The implementation supports all required setting types:
-
-- boolean
-- text
-- number
-- select
-- multiselect
-
-The field renderer handles these types generically, which means adding a new setting of an existing type does not require new field-specific JSX.
-
-## Where To Change Things When Adding Settings
-
-The implementation is meant to support adding new settings in code rather than wiring each one manually in JSX.
-
-For a new setting of an already supported type, the main update points are:
-
-- [types/account.ts](types/account.ts)
-  - add the field to `IAccountSettings`
-  - add a union type if the setting introduces new select-like values
-- [config/accountSettings.ts](config/accountSettings.ts)
-  - add the field definition to `ACCOUNT_SETTINGS_SCHEMA`
-  - define options and validation metadata there when needed
-- [config/mockData.ts](config/mockData.ts)
-  - add the field value for each mocked account
-- [app/hooks/useAccountSettings.ts](app/hooks/useAccountSettings.ts)
-  - include the field in `extractSettings`
-
-Once those changes are made, the UI adapts automatically because:
-
-- [app/components/form/AccountSettingsForm.tsx](app/components/form/AccountSettingsForm.tsx) renders by iterating over the schema
-- [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx) handles supported field types generically
-- [app/components/form/AccountSettingField.tsx](app/components/form/AccountSettingField.tsx) handles supported read-only rendering generically
-- [app/hooks/useAccountSettingValidation.ts](app/hooks/useAccountSettingValidation.ts) builds validation rules from schema metadata
-
-Example:
-
-- adding a new `language` setting of type `select` only requires changes to the settings type, schema, mock data, and extracted settings shape
-- no new form-specific JSX is needed for that case
-
-If a completely new field type is introduced, for example `date`, then the renderer must also be extended. In that case, update:
-
-- [config/accountSettings.ts](config/accountSettings.ts)
-  - add the new setting-definition type and schema entry
-- [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx)
-  - add edit-mode support for the new type
-- [app/components/form/AccountSettingField.tsx](app/components/form/AccountSettingField.tsx)
-  - add read-only rendering for the new type
 - [app/hooks/useAccountSettingValidation.ts](app/hooks/useAccountSettingValidation.ts)
-  - add validation behavior if the new type needs type-specific rules
 
-## Loading and Async Behavior
+That keeps validation closer to the schema and reduces field-specific branching in the renderer.
 
-To make the experience closer to a real application, the implementation includes simulated asynchronous behavior:
+## Why This Is Reusable
 
-- account page server delay in [app/dashboard/[accountId]/page.tsx](app/dashboard/[accountId]/page.tsx)
-- save delay in [app/hooks/useAccountSettings.ts](app/hooks/useAccountSettings.ts)
+The code supports adding new settings of an already supported type by changing the model and schema rather than manually wiring new JSX.
 
-Loading states are also separated:
+For those cases, the usual extension points are:
 
-- route fallback in [app/dashboard/[accountId]/loading.tsx](app/dashboard/[accountId]/loading.tsx)
-- schema-aware loading component in [app/components/form/AccountSettingsLoading.tsx](app/components/form/AccountSettingsLoading.tsx)
-- loading metadata hook in [app/hooks/useAccountSettingsLoading.ts](app/hooks/useAccountSettingsLoading.ts)
+- [types/account.ts](types/account.ts)
+- [config/accountSettings.ts](config/accountSettings.ts)
+- [config/mockData.ts](config/mockData.ts)
+- [app/hooks/useAccountSettings.ts](app/hooks/useAccountSettings.ts)
 
-This keeps loading logic consistent with the same schema-driven philosophy used by the form itself.
+Once those are updated, rendering, read-only display, and validation follow automatically for supported types because they are driven by the same schema.
 
-## Folder Organization
-
-The components were split into:
-
-- `app/components/ui`
-  - generic UI pieces
-- `app/components/form`
-  - account settings form flow and rendering
-
-This separation makes the codebase easier to navigate and better reflects intent.
+This is the main reason the implementation aligns with the requirement that settings should be defined in code and the UI should adapt automatically.
 
 ## Tradeoffs
 
-### Chosen tradeoffs
+The main tradeoffs were:
 
 - `localStorage` instead of backend persistence
 - explicit support for a fixed set of field types
-- schema-driven rendering rather than hardcoded fields
-- smaller client boundary instead of making the entire page interactive
+- schema-driven rendering instead of per-setting components
+- a small client boundary rather than making the whole page interactive
 
-### Known limitation
+The important limitation is that the UI adapts automatically only for supported field types. If a completely new type is introduced, such as `date`, the renderer and validation layer still need to be extended. That is an intentional tradeoff: the system is optimized for scalable addition of fields within a controlled set of field types.
 
-If a completely new setting type is introduced, the renderer still needs to be extended. That is an intentional tradeoff. The system is optimized for adding new settings of supported types automatically, which is the main requirement of the assignment.
+## Technical Reasoning
 
-## Future Improvements
+This structure was chosen because it balances simplicity with scalability:
 
-If this were extended beyond the assignment, the next steps would be:
+- it is small enough for an assignment-sized implementation
+- it demonstrates reusable UI architecture rather than hardcoded screens
+- it keeps TypeScript types and field definitions aligned
+- it makes per-account persistence straightforward
+- it leaves a clear path toward backend persistence later
 
-- replace `localStorage` with backend persistence
-- fetch account settings from a database on the server
-- save via server actions or an API route
-- simplify hydration logic once persistence becomes server-readable
-- add validation rules per field in the schema
-- add tests for schema rendering and persistence behavior
-
-## Summary
-
-This implementation is designed around the assignment’s core evaluation criteria:
-
-- reusable structure
-- settings defined in code
-- adaptive UI
-- clean separation of concerns
-- practical handling of per-account state
-
-The final result is intentionally small, but the structure is meant to scale better than a one-off form implementation.
+If extended beyond the assignment, the next logical evolution would be replacing `localStorage` with a backend while keeping the same schema-driven UI layer.
