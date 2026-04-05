@@ -1,8 +1,6 @@
-import { getAccountById } from "@/config/mockData";
 import AccountSettingsPanel from "@/app/components/form/AccountSettingsPanel";
+import { loadSingleAccount } from "@/app/loaders/account-loader";
 import { Typography } from "@mui/material";
-
-const SIMULATED_ACCOUNT_RESPONSE_DELAY_MS = 400;
 
 interface AccountPageProps {
   params: Promise<{
@@ -13,11 +11,13 @@ interface AccountPageProps {
 const AccountPage = async ({ params }: AccountPageProps) => {
   const { accountId } = await params;
 
-  await new Promise((resolve) =>
-    setTimeout(resolve, SIMULATED_ACCOUNT_RESPONSE_DELAY_MS),
-  );
+  let account = null;
 
-  const account = getAccountById(accountId);
+  try {
+    account = await loadSingleAccount(accountId);
+  } catch {
+    account = null;
+  }
 
   if (!account) {
     return (

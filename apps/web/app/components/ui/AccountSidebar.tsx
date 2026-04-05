@@ -1,8 +1,10 @@
-import { MOCK_ACCOUNTS } from "@/config/mockData";
+import { loadSidebarAccounts } from "@/app/loaders/account-loader";
 import { List } from "@mui/material";
 import SidebarListItem from "./SidebarListItem";
 
-const AccountSidebar = () => {
+const AccountSidebar = async () => {
+  const accounts = await loadSidebarAccounts();
+
   return (
     <List
       aria-label="Accounts"
@@ -13,7 +15,7 @@ const AccountSidebar = () => {
         pr: 1,
       }}
     >
-      {MOCK_ACCOUNTS.map((account) => (
+      {accounts.map((account) => (
         <SidebarListItem key={account.id} account={account} />
       ))}
     </List>

@@ -23,7 +23,7 @@ const AccountSettingsPanel = ({ account }: AccountSettingsPanelProps) => {
         </Typography>
         <Typography color="text.secondary">
           Review and manage this account&apos;s settings. Saved changes are
-          stored locally per account.
+          persisted through the backend API.
         </Typography>
       </Box>
 

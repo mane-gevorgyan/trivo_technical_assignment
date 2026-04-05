@@ -1,10 +1,12 @@
-import { DEFAULT_ACCOUNT } from "@/config/mockData";
+import { loadDefaultAccount } from "@/app/loaders/account-loader";
 import { Container } from "@mui/material";
 import { redirect } from "next/navigation";
 
-export default function DashboardPage() {
-  if (DEFAULT_ACCOUNT) {
-    redirect(`/dashboard/${DEFAULT_ACCOUNT.id}`);
+export default async function DashboardPage() {
+  const defaultAccount = await loadDefaultAccount();
+
+  if (defaultAccount) {
+    redirect(`/dashboard/${defaultAccount.id}`);
   } else {
     return (
       <Container>

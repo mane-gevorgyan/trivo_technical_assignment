@@ -1,66 +1,23 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { dispatchAccountSettingsUpdate } from "@/app/dispatchers/account-dispatcher";
+import { extractAccountSettings } from "@/lib/account-settings";
 import type { FullAccountData, IAccountSettings } from "@/types/account";
 
-import { useIsHydrated } from "./useIsHydrated";
-
-const buildStorageKey = (accountId: string) => `account-settings:${accountId}`;
-const SIMULATED_SAVE_DELAY_MS = 400;
-
-const extractSettings = (account: FullAccountData): IAccountSettings => ({
-  notifications: account.notifications,
-  support_email: account.support_email,
-  daily_email_limit: account.daily_email_limit,
-  timezone: account.timezone,
-  allowed_channels: account.allowed_channels,
-});
-
-const getStoredSettings = (
-  account: FullAccountData,
-  fallbackSettings: IAccountSettings
-) => {
-  const storedSettings = window.localStorage.getItem(
-    buildStorageKey(account.id)
-  );
-
-  if (!storedSettings) {
-    return fallbackSettings;
-  }
-
-  try {
-    const parsedSettings = JSON.parse(
-      storedSettings
-    ) as Partial<IAccountSettings>;
-
-    return {
-      ...fallbackSettings,
-      ...parsedSettings,
-    };
-  } catch {
-    return fallbackSettings;
-  }
-};
-
 export const useAccountSettings = (account: FullAccountData) => {
-  const initialSettings = useMemo(() => extractSettings(account), [account]);
-  const isHydrated = useIsHydrated();
-  const initialClientSettings = useMemo(() => {
-    if (typeof window === "undefined") {
-      return initialSettings;
-    }
-
-    return getStoredSettings(account, initialSettings);
-  }, [account, initialSettings]);
+  const initialSettings = useMemo(
+    () => extractAccountSettings(account),
+    [account],
+  );
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [savedSettings, setSavedSettings] = useState<IAccountSettings>(
-    initialClientSettings
-  );
+  const [savedSettings, setSavedSettings] =
+    useState<IAccountSettings>(initialSettings);
 
   const form = useForm<IAccountSettings>({
-    defaultValues: initialClientSettings,
+    defaultValues: initialSettings,
     mode: "onSubmit",
     reValidateMode: "onChange",
   });
@@ -69,6 +26,12 @@ export const useAccountSettings = (account: FullAccountData) => {
   const watchedValues = useWatch({
     control,
   });
+
+  useEffect(() => {
+    setSavedSettings(initialSettings);
+    reset(initialSettings);
+    setIsEditing(false);
+  }, [initialSettings, reset]);
 
   const startEditing = () => {
     reset(savedSettings);
@@ -82,19 +45,20 @@ export const useAccountSettings = (account: FullAccountData) => {
 
   const saveSettings = handleSubmit(async (nextSettings) => {
     setIsSaving(true);
-    await new Promise((resolve) =>
-      window.setTimeout(resolve, SIMULATED_SAVE_DELAY_MS)
-    );
 
-    window.localStorage.setItem(
-      buildStorageKey(account.id),
-      JSON.stringify(nextSettings)
-    );
+    try {
+      const updatedAccount = await dispatchAccountSettingsUpdate(
+        account.id,
+        nextSettings,
+      );
+      const updatedSettings = extractAccountSettings(updatedAccount);
 
-    setSavedSettings(nextSettings);
-    reset(nextSettings);
-    setIsSaving(false);
-    setIsEditing(false);
+      setSavedSettings(updatedSettings);
+      reset(updatedSettings);
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
   });
 
   return {
@@ -104,7 +68,7 @@ export const useAccountSettings = (account: FullAccountData) => {
       : savedSettings,
     form,
     isEditing,
-    isReady: isHydrated,
+    isReady: true,
     isSaving,
     startEditing,
     cancelEditing,
