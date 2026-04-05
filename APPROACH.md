@@ -47,6 +47,14 @@ This keeps:
 
 aligned through one shared layer instead of duplicating them in multiple apps.
 
+I also kept the shared settings contract in camelCase end to end, for example:
+
+- `supportEmail`
+- `dailyEmailLimit`
+- `allowedChannels`
+
+That avoids unnecessary app-to-database field-name translation and keeps the TypeScript model consistent across the monorepo.
+
 ### 3. Monorepo split by responsibility
 
 The repo is intentionally split into:
@@ -135,13 +143,34 @@ This split keeps responsibilities clear:
 - services apply application logic and validation
 - repositories handle persistence access
 
-### Why a mock repository first
+### Persistence strategy
 
-The backend’s current source of truth is:
+The backend started with a backend-owned mock dataset:
 
 - [mock-accounts.ts](/apps/api/src/data/mock-accounts.ts)
 
-I chose a repository abstraction first because it gives a clean path to database persistence later without rewriting the controller or service layers. The mock repository proves the API shape and business flow while keeping the assignment scope manageable.
+I chose a repository abstraction first because it gives a clean path to database persistence without rewriting the controller or service layers. That path is now implemented in two repository variants:
+
+- [mock-account-repository.ts](/apps/api/src/repositories/mock-account-repository.ts)
+- [db-account-repository.ts](/apps/api/src/repositories/db-account-repository.ts)
+
+The database-backed repository uses Prisma with PostgreSQL:
+
+- [schema.prisma](/apps/api/prisma/schema.prisma)
+- [seed.ts](/apps/api/prisma/seed.ts)
+- [prisma.ts](/apps/api/src/lib/prisma.ts)
+- [account-repository-helpers.ts](/apps/api/src/repositories/helpers/account-repository-helpers.ts)
+
+Repository selection is resolved in:
+
+- [account-dependencies.ts](/apps/api/src/config/account-dependencies.ts)
+
+That lets the API run against `DATA_SOURCE=mock` or `DATA_SOURCE=db` while keeping the rest of the request flow unchanged. I kept both modes intentionally:
+
+- `mock` gives reviewers a friction-free startup path
+- `db` demonstrates how the same backend can switch to real persistence without changing the controller or service layers
+
+Even with the aligned camelCase field names, I still keep a small flattening helper in the repository layer because the database stores settings as a related `AccountSettings` record while the API returns a single flattened account object.
 
 ### Validation
 
@@ -174,11 +203,12 @@ That is a good signal for maintainability because adding a field does not requir
 
 ### 2. Persistence can evolve independently
 
-The backend can later replace:
+The backend can switch between:
 
 - [mock-account-repository.ts](/apps/api/src/repositories/mock-account-repository.ts)
+- [db-account-repository.ts](/apps/api/src/repositories/db-account-repository.ts)
 
-with a DB-backed repository while keeping:
+while keeping:
 
 - routes
 - controllers
@@ -191,7 +221,9 @@ mostly unchanged.
 
 The main tradeoffs in the current solution are:
 
-- mock repository instead of database persistence
+- Prisma + PostgreSQL adds real persistence, but also adds local setup cost compared with a pure mock backend
+- the mock repository is intentionally kept alongside the DB repository to preserve a simple fallback path and to make the persistence boundary explicit
+- onboarding is optimized by documenting mock mode first and Docker/PostgreSQL second
 - explicit support for a controlled set of field types
 - server-side data loading for account fetches, with client-side mutation for saves
 - a lightweight full-stack implementation rather than a more enterprise-heavy backend framework
@@ -202,8 +234,8 @@ These tradeoffs were intentional. The assignment scope is small enough that the 
 
 If I extended this further, the next steps would be:
 
-- replace the mock repository with a DB-backed repository
 - add focused API and form interaction tests
+- add Prisma migrations instead of relying only on `db push`
 - improve frontend save/load feedback further with retry flows or inline status components
 - add deployment configuration for the web and API apps
 

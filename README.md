@@ -6,7 +6,7 @@ Account settings application implemented as a small monorepo with:
 - `apps/api`: Express backend
 - `shared`: shared domain types, constants, and validation schemas
 
-The frontend is schema-driven, account-specific, and connected to a typed backend API. The backend currently uses a mock repository as its source of truth, with the architecture intentionally prepared for a later database-backed repository.
+The frontend is schema-driven, account-specific, and connected to a typed backend API. The backend uses a layered repository architecture and can run either against backend-owned mock data or a PostgreSQL database through Prisma.
 
 ## Highlights
 
@@ -17,6 +17,7 @@ The frontend is schema-driven, account-specific, and connected to a typed backen
 - clear separation between UI, loaders, dispatchers, controllers, services, and repositories
 - validation on both the frontend form flow and backend request/response boundaries
 - user-facing loading and error states for account fetch and save flows
+- one shared camelCase account/settings contract across frontend, backend, and database code
 
 ## Tech Stack
 
@@ -27,6 +28,8 @@ The frontend is schema-driven, account-specific, and connected to a typed backen
 - React Hook Form
 - Axios
 - Express
+- Prisma
+- PostgreSQL
 - Zod
 - npm workspaces
 
@@ -45,7 +48,55 @@ Install dependencies:
 npm install
 ```
 
-Run both frontend and backend:
+### Fastest Start: Mock Mode
+
+This is the easiest path for reviewers and new users. It requires no local database.
+
+Set the API env to use the mock repository:
+
+```env
+PORT=9000
+DATA_SOURCE=mock
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/trivo_assignment?schema=public"
+```
+
+Then run both frontend and backend:
+
+```bash
+npm run dev
+```
+
+### Full Setup: PostgreSQL via Docker
+
+If you want to run the real Prisma + PostgreSQL flow:
+
+1. Start PostgreSQL in Docker:
+
+```bash
+docker rm -f trivo-postgres 2>/dev/null || true
+docker run --name trivo-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=trivo_assignment \
+  -p 5433:5432 \
+  -d postgres
+```
+
+2. Set the API env to database mode:
+
+```env
+PORT=9000
+DATA_SOURCE=db
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/trivo_assignment?schema=public"
+```
+
+3. Prepare the database:
+
+```bash
+npm run db:setup:api
+```
+
+4. Start the apps:
 
 ```bash
 npm run dev
@@ -61,6 +112,15 @@ Run only the backend:
 
 ```bash
 npm run dev:api
+```
+
+Database helpers from the repo root:
+
+```bash
+npm run db:generate:api
+npm run db:push:api
+npm run db:seed:api
+npm run db:setup:api
 ```
 
 Type-check the frontend:
@@ -94,6 +154,19 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:9000
 
 If this variable is not set, the frontend falls back to `http://localhost:9000`.
 
+The backend environment lives in `apps/api/.env`:
+
+```env
+PORT=9000
+DATA_SOURCE=mock
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/trivo_assignment?schema=public"
+```
+
+Use:
+
+- `DATA_SOURCE=mock` for the easiest local startup
+- `DATA_SOURCE=db` to run against PostgreSQL through Prisma
+
 ## Project Structure
 
 ```text
@@ -123,8 +196,10 @@ apps/
       config/
       controllers/
       data/
+      lib/
       mappers/
       middleware/
+      prisma/
       repositories/
       routes/
       services/
@@ -143,7 +218,7 @@ shared/
 For a new setting that uses an already supported field type, update:
 
 - [account.ts](/shared/src/types/account.ts)
-  - add the field to `IAccountSettings`
+  - add the camelCase field to `IAccountSettings`
 - [accountSettings.ts](/apps/web/config/accountSettings.ts)
   - add the field definition to `ACCOUNT_SETTINGS_SCHEMA`
   - add options and validation metadata if needed
@@ -154,6 +229,12 @@ For a new setting that uses an already supported field type, update:
 - [account-settings-schema.ts](/shared/src/schemas/account-settings-schema.ts)
   - add the field to backend/shared validation if it belongs to the editable settings payload
 
+The shared settings contract is camelCase end to end, for example:
+
+- `supportEmail`
+- `dailyEmailLimit`
+- `allowedChannels`
+
 For a brand new field type such as `date`, also extend:
 
 - [AccountSettingEditor.tsx](/apps/web/app/components/form/AccountSettingEditor.tsx)
@@ -162,11 +243,13 @@ For a brand new field type such as `date`, also extend:
 
 ## Current Tradeoffs
 
-- The backend currently uses a mock repository instead of a database.
+- PostgreSQL support is now in place through Prisma, but the mock repository is still kept for fast local fallback and for clearly demonstrating the repository abstraction.
+- The mock path is intentionally documented first so new users can run the project quickly without needing local database tooling.
+- The database model and app contract use the same camelCase field names, but the API still intentionally flattens the nested `Account -> settings` relation into one account response object.
 - The UI adapts automatically for supported field types, but introducing a completely new field type still requires renderer support.
 - API reads for sidebar and account detail are server-side in Next.js, while settings updates are client-triggered.
 
-This was a deliberate scope decision: the solution demonstrates a maintainable full-stack structure first, while keeping a clean path to replace the mock repository with a DB-backed repository later.
+This was a deliberate scope decision: the solution demonstrates a maintainable full-stack structure first, while keeping persistence swappable through the repository layer rather than binding the whole backend directly to one storage strategy.
 
 ## AI Usage Note
 
