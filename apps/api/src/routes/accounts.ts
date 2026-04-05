@@ -1,13 +1,28 @@
 import { Router, type Router as ExpressRouter } from "express";
 
-import { getSidebarAccounts, getSingleAccount } from "../controllers/account-controller";
+import {
+  getSidebarAccounts,
+  getSingleAccount,
+  updateAccountSettings,
+} from "../controllers/account-controller";
+import {
+  validateAccountParams,
+  validateAccountSettingsBody,
+} from "../middleware/account-params-middleware";
 
 export const createAccountsRouter = (): ExpressRouter => {
   const router = Router();
 
   router.get("/", getSidebarAccounts);
 
-  router.get("/:accountId", getSingleAccount);
+  router.get("/:accountId", validateAccountParams, getSingleAccount);
+
+  router.patch(
+    "/:accountId/settings",
+    validateAccountParams,
+    validateAccountSettingsBody,
+    updateAccountSettings,
+  );
 
   return router;
 };

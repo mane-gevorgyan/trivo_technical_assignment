@@ -1,6 +1,7 @@
 import { toAccountSummary } from "../mappers/account-mapper";
 import type { AccountRepository } from "../repositories/account-repository";
 import {
+  type AccountSettingsPatchInput,
   fullAccountDataSchema,
   sidebarAccountsSchema,
   type FullAccountResponse,
@@ -20,7 +21,9 @@ export class AccountService {
     return sidebarAccountsSchema.parse(accounts.map(toAccountSummary));
   }
 
-  async getSingleAccount(accountId: string): Promise<FullAccountResponse | null> {
+  async getSingleAccount(
+    accountId: string,
+  ): Promise<FullAccountResponse | null> {
     const accountData = await this.accountRepository.getAccountById(accountId);
 
     if (!accountData) {
@@ -28,5 +31,21 @@ export class AccountService {
     }
 
     return fullAccountDataSchema.parse(accountData);
+  }
+
+  async updateAccountSettings(
+    accountId: string,
+    settingsData: AccountSettingsPatchInput,
+  ): Promise<FullAccountResponse | null> {
+    const updatedAccount = await this.accountRepository.updateAccountSettings(
+      accountId,
+      settingsData,
+    );
+
+    if (!updatedAccount) {
+      return null;
+    }
+
+    return fullAccountDataSchema.parse(updatedAccount);
   }
 }

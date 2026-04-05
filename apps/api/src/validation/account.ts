@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { accountSettingsSchema } from "@trivo/shared/schemas/account-settings";
 import {
   CHANNEL_OPTIONS,
   TIMEZONE_OPTIONS,
@@ -27,8 +28,16 @@ export const fullAccountDataSchema = z.object({
 });
 
 export const sidebarAccountsSchema = z.array(accountSummarySchema);
+export const accountSettingsPatchSchema = accountSettingsSchema
+  .partial()
+  .refine((settings) => Object.keys(settings).length > 0, {
+    message: "At least one account setting is required.",
+  });
 
 export type AccountParams = z.infer<typeof accountParamsSchema>;
 export type AccountSummary = z.infer<typeof accountSummarySchema>;
 export type FullAccountResponse = z.infer<typeof fullAccountDataSchema>;
 export type SidebarAccountsResponse = z.infer<typeof sidebarAccountsSchema>;
+export type AccountSettingsPatchInput = z.infer<
+  typeof accountSettingsPatchSchema
+>;

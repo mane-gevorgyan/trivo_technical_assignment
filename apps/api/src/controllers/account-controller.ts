@@ -3,8 +3,8 @@ import { ZodError } from "zod";
 
 import { accountService } from "../config/account-dependencies";
 import {
-  accountParamsSchema,
   type AccountParams,
+  type AccountSettingsPatchInput,
   type FullAccountResponse,
   type SidebarAccountsResponse,
 } from "../validation/account";
@@ -39,17 +39,8 @@ export const getSingleAccount: RequestHandler<
   AccountParams,
   ErrorResponse | FullAccountResponse
 > = async (request, response) => {
-  const parsedParams = accountParamsSchema.safeParse(request.params);
-
-  if (!parsedParams.success) {
-    response.status(400).json({
-      message: "Invalid account id.",
-    });
-    return;
-  }
-
   try {
-    const { accountId } = parsedParams.data;
+    const { accountId } = request.params;
 
     const singleAccountData = await accountService.getSingleAccount(accountId);
 
@@ -71,6 +62,41 @@ export const getSingleAccount: RequestHandler<
 
     response.status(500).json({
       message: "Unable to load account.",
+    });
+  }
+};
+
+export const updateAccountSettings: RequestHandler<
+  AccountParams,
+  ErrorResponse | FullAccountResponse,
+  AccountSettingsPatchInput
+> = async (request, response) => {
+  try {
+    const { accountId } = request.params;
+
+    const updatedSettings = await accountService.updateAccountSettings(
+      accountId,
+      request.body,
+    );
+
+    if (!updatedSettings) {
+      response.status(404).json({
+        message: "Account not found.",
+      });
+      return;
+    }
+
+    response.status(200).json(updatedSettings);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      response.status(500).json({
+        message: "Updated account data is invalid.",
+      });
+      return;
+    }
+
+    response.status(500).json({
+      message: "Unable to update account settings.",
     });
   }
 };
