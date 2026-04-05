@@ -2,4 +2,5 @@ import type { FullAccountData } from "@trivo/shared/types/account";
 
 export interface AccountRepository {
   getAccounts(): Promise<FullAccountData[]>;
+  getAccountById(accountId: string): Promise<FullAccountData | null>;
 }

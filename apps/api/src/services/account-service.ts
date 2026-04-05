@@ -1,13 +1,16 @@
-import type { IAccount } from "@trivo/shared/types/account";
-
 import { toAccountSummary } from "../mappers/account-mapper";
-import { sidebarAccountsSchema } from "../validation/account";
 import type { AccountRepository } from "../repositories/account-repository";
+import {
+  fullAccountDataSchema,
+  sidebarAccountsSchema,
+  type FullAccountResponse,
+  type SidebarAccountsResponse,
+} from "../validation/account";
 
 export class AccountService {
   constructor(private readonly accountRepository: AccountRepository) {}
 
-  async getSidebarAccounts(): Promise<IAccount[]> {
+  async getSidebarAccounts(): Promise<SidebarAccountsResponse> {
     const accounts = await this.accountRepository.getAccounts();
 
     if (accounts.length === 0) {
@@ -15,5 +18,15 @@ export class AccountService {
     }
 
     return sidebarAccountsSchema.parse(accounts.map(toAccountSummary));
+  }
+
+  async getSingleAccount(accountId: string): Promise<FullAccountResponse | null> {
+    const accountData = await this.accountRepository.getAccountById(accountId);
+
+    if (!accountData) {
+      return null;
+    }
+
+    return fullAccountDataSchema.parse(accountData);
   }
 }
