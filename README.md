@@ -154,6 +154,10 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:9000
 
 If this variable is not set, the frontend falls back to `http://localhost:9000`.
 
+Frontend env example:
+
+- [apps/web/.env.example](/apps/web/.env.example)
+
 The backend environment lives in `apps/api/.env`:
 
 ```env
@@ -166,6 +170,10 @@ Use:
 
 - `DATA_SOURCE=mock` for the easiest local startup
 - `DATA_SOURCE=db` to run against PostgreSQL through Prisma
+
+Backend env example:
+
+- [apps/api/.env.example](/apps/api/.env.example)
 
 ## Project Structure
 
