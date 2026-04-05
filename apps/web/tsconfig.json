@@ -7,7 +7,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@trivo/shared": ["../../shared/src/index.ts"],
+      "@trivo/shared/*": ["../../shared/src/*"]
     }
   },
   "include": [

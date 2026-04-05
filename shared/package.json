@@ -1,0 +1,17 @@
+{
+  "name": "@trivo/shared",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./types/account": "./src/types/account.ts",
+    "./constants/account-settings": "./src/constants/account-settings.ts",
+    "./schemas/account-settings": "./src/schemas/account-settings-schema.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.1.12"
+  }
+}
