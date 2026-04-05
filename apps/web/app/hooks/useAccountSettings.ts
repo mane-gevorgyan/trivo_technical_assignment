@@ -13,6 +13,7 @@ export const useAccountSettings = (account: FullAccountData) => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [savedSettings, setSavedSettings] =
     useState<IAccountSettings>(initialSettings);
 
@@ -29,22 +30,26 @@ export const useAccountSettings = (account: FullAccountData) => {
 
   useEffect(() => {
     setSavedSettings(initialSettings);
+    setSaveError(null);
     reset(initialSettings);
     setIsEditing(false);
   }, [initialSettings, reset]);
 
   const startEditing = () => {
+    setSaveError(null);
     reset(savedSettings);
     setIsEditing(true);
   };
 
   const cancelEditing = () => {
+    setSaveError(null);
     reset(savedSettings);
     setIsEditing(false);
   };
 
   const saveSettings = handleSubmit(async (nextSettings) => {
     setIsSaving(true);
+    setSaveError(null);
 
     try {
       const updatedAccount = await dispatchAccountSettingsUpdate(
@@ -56,6 +61,12 @@ export const useAccountSettings = (account: FullAccountData) => {
       setSavedSettings(updatedSettings);
       reset(updatedSettings);
       setIsEditing(false);
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Unable to save account settings. Please try again.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -70,6 +81,7 @@ export const useAccountSettings = (account: FullAccountData) => {
     isEditing,
     isReady: true,
     isSaving,
+    saveError,
     startEditing,
     cancelEditing,
     saveSettings,

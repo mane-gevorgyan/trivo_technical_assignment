@@ -1,6 +1,6 @@
 "use client";
 
-import { Paper, Stack } from "@mui/material";
+import { Alert, Paper, Stack } from "@mui/material";
 
 import { ACCOUNT_SETTINGS_SCHEMA } from "@/config/accountSettings";
 import { useAccountSettings } from "@/app/hooks/useAccountSettings";
@@ -21,6 +21,7 @@ const AccountSettingsForm = ({ account }: AccountSettingsFormProps) => {
     isEditing,
     isReady,
     isSaving,
+    saveError,
     startEditing,
     cancelEditing,
     saveSettings,
@@ -32,6 +33,8 @@ const AccountSettingsForm = ({ account }: AccountSettingsFormProps) => {
 
   return (
     <Stack spacing={3}>
+      {saveError ? <Alert severity="error">{saveError}</Alert> : null}
+
       <AccountSettingsActions
         isEditing={isEditing}
         isSaving={isSaving}

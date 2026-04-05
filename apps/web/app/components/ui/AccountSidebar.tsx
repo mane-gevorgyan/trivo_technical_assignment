@@ -1,9 +1,28 @@
 import { loadSidebarAccounts } from "@/app/loaders/account-loader";
-import { List } from "@mui/material";
+import type { IAccount } from "@/types/account";
+import { Alert, List } from "@mui/material";
 import SidebarListItem from "./SidebarListItem";
 
 const AccountSidebar = async () => {
-  const accounts = await loadSidebarAccounts();
+  let accounts: IAccount[] = [];
+  let errorMessage: string | null = null;
+
+  try {
+    accounts = await loadSidebarAccounts();
+  } catch (error) {
+    errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Unable to load accounts right now.";
+  }
+
+  if (errorMessage) {
+    return <Alert severity="error">{errorMessage}</Alert>;
+  }
+
+  if (accounts.length === 0) {
+    return <Alert severity="info">No accounts are available yet.</Alert>;
+  }
 
   return (
     <List
