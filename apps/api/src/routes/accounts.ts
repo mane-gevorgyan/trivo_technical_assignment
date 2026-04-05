@@ -8,7 +8,7 @@ import {
 import {
   validateAccountParams,
   validateAccountSettingsBody,
-} from "../middleware/account-params-middleware";
+} from "../middleware/account-validation-middleware";
 
 export const createAccountsRouter = (): ExpressRouter => {
   const router = Router();

@@ -2,111 +2,219 @@
 
 ## Goal
 
-The assignment emphasizes reusability and adaptability, so the implementation was designed as a small settings system rather than a page with hardcoded fields.
+The assignment emphasized reusability, maintainability, account-specific behavior, and clear TypeScript usage. I treated it as a small full-stack system rather than a single page, with the goal of proving that new settings and persistence strategies can be added without rewriting the UI.
 
-The main goals were:
+The key goals were:
 
-- keep settings defined in code
-- render the UI from that code-defined schema
-- support account-specific state and persistence
-- make supported settings easy to add without rewriting form JSX
+- define settings in code and render them from that definition
+- keep frontend and backend contracts typed and explicit
+- isolate data access from UI rendering
+- make account-specific settings easy to extend
+- keep the implementation small enough for the assignment scope while still reflecting production-minded structure
 
-## Core Design Choice
+## Main Design Decisions
 
-The central decision is the schema-driven model in:
+### 1. Schema-driven settings UI
 
-- [config/accountSettings.ts](config/accountSettings.ts)
+The central frontend decision is the schema in:
 
-That schema is the source of truth for:
+- [accountSettings.ts](/apps/web/config/accountSettings.ts)
+
+That schema defines:
 
 - setting keys
 - labels and descriptions
 - field type
-- options for select-like fields
-- metadata such as placeholders, numeric limits, input type, and validation rules
+- select and multiselect options
+- validation metadata such as required flags, numeric constraints, and input type
 
-Instead of building separate JSX for each setting, the form iterates over that schema and renders the appropriate field. This keeps the implementation smaller, more consistent, and easier to extend.
+The form renderer iterates over the schema instead of hardcoding one JSX block per setting. This is the main reason the UI can adapt automatically for already supported field types.
 
-## Architecture
+### 2. Shared domain contract
 
-### Data shape
+The monorepo uses a shared package for domain-safe code:
 
-The domain model is defined in:
+- [account.ts](/shared/src/types/account.ts)
+- [account-settings.ts](/shared/src/constants/account-settings.ts)
+- [account-settings-schema.ts](/shared/src/schemas/account-settings-schema.ts)
 
-- [types/account.ts](types/account.ts)
+This keeps:
 
-The key separation is:
+- frontend field types
+- backend request/response types
+- validation rules
+- allowed option values
 
-- account identity: `id`, `name`
-- account settings: reusable settings fields grouped in `IAccountSettings`
+aligned through one shared layer instead of duplicating them in multiple apps.
 
-That allows the rendering logic to work with a predictable settings object rather than unrelated account metadata.
+### 3. Monorepo split by responsibility
+
+The repo is intentionally split into:
+
+- `apps/web`
+- `apps/api`
+- `shared`
+
+This gives a clean separation between:
+
+- UI concerns
+- HTTP/API concerns
+- shared domain and validation concerns
+
+That structure makes it easier to explain the system and leaves a straightforward path for future expansion.
+
+## Frontend Architecture
 
 ### Rendering flow
 
-The main rendering flow is:
+The frontend rendering flow is:
 
-1. [app/dashboard/[accountId]/page.tsx](app/dashboard/%5BaccountId%5D/page.tsx) loads the selected account
-2. [app/components/form/AccountSettingsForm.tsx](app/components/form/AccountSettingsForm.tsx) iterates through `ACCOUNT_SETTINGS_SCHEMA`
-3. [app/components/form/AccountSettingField.tsx](app/components/form/AccountSettingField.tsx) decides between read-only and edit mode
-4. [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx) renders the correct control for the field type
+1. [page.tsx](/apps/web/app/dashboard/[accountId]/page.tsx) loads the selected account through a loader
+2. [AccountSettingsPanel.tsx](/apps/web/app/components/form/AccountSettingsPanel.tsx) provides the account context for the page
+3. [AccountSettingsForm.tsx](/apps/web/app/components/form/AccountSettingsForm.tsx) iterates through the settings schema
+4. [AccountSettingField.tsx](/apps/web/app/components/form/AccountSettingField.tsx) decides between read-only and edit mode
+5. [AccountSettingEditor.tsx](/apps/web/app/components/form/AccountSettingEditor.tsx) renders the correct field control
 
-This is what makes the UI adaptive for supported types.
+This keeps rendering generic while still supporting different field types.
 
-### Form state and persistence
+### API logic separated from UI
 
-Form state is handled in:
+I intentionally moved request orchestration out of UI components:
 
-- [app/hooks/useAccountSettings.ts](app/hooks/useAccountSettings.ts)
+- generic HTTP layer:
+  - [callAPI.ts](/apps/web/lib/api/callAPI.ts)
+- endpoint-specific API layer:
+  - [account-api.ts](/apps/web/lib/api/account-api.ts)
+- server-side data loading:
+  - [account-loader.ts](/apps/web/app/loaders/account-loader.ts)
+- client-side mutations:
+  - [account-dispatcher.ts](/apps/web/app/dispatchers/account-dispatcher.ts)
 
-That hook is responsible for:
+That means UI components consume app-level functions like `loadSidebarAccounts()` or `dispatchAccountSettingsUpdate()` instead of making raw API calls directly.
 
-- extracting the editable settings shape from an account
+### Form state
+
+Form state lives in:
+
+- [useAccountSettings.ts](/apps/web/app/hooks/useAccountSettings.ts)
+
+This hook is responsible for:
+
+- extracting editable settings from the full account object
 - initializing React Hook Form
-- tracking edit mode
-- handling cancel/save behavior
-- persisting account-specific values in `localStorage`
+- handling edit/cancel/save flow
+- syncing when the active account changes
+- surfacing save errors to the UI
 
-Validation rules are derived from schema metadata in:
+Validation rules for individual fields are derived from schema metadata in:
 
-- [app/hooks/useAccountSettingValidation.ts](app/hooks/useAccountSettingValidation.ts)
+- [useAccountSettingValidation.ts](/apps/web/app/hooks/useAccountSettingValidation.ts)
 
-That keeps validation closer to the schema and reduces field-specific branching in the renderer.
+## Backend Architecture
+
+The backend is intentionally layered even though it currently uses mock persistence.
+
+### Route -> controller -> service -> repository
+
+The main request flow is:
+
+1. route definition
+   - [accounts.ts](/apps/api/src/routes/accounts.ts)
+2. controller
+   - [account-controller.ts](/apps/api/src/controllers/account-controller.ts)
+3. service
+   - [account-service.ts](/apps/api/src/services/account-service.ts)
+4. repository
+   - [account-repository.ts](/apps/api/src/repositories/account-repository.ts)
+   - [mock-account-repository.ts](/apps/api/src/repositories/mock-account-repository.ts)
+
+This split keeps responsibilities clear:
+
+- routes define endpoints
+- controllers translate HTTP request/response behavior
+- services apply application logic and validation
+- repositories handle persistence access
+
+### Why a mock repository first
+
+The backend’s current source of truth is:
+
+- [mock-accounts.ts](/apps/api/src/data/mock-accounts.ts)
+
+I chose a repository abstraction first because it gives a clean path to database persistence later without rewriting the controller or service layers. The mock repository proves the API shape and business flow while keeping the assignment scope manageable.
+
+### Validation
+
+Backend validation is split between:
+
+- shared settings payload validation:
+  - [account-settings-schema.ts](/shared/src/schemas/account-settings-schema.ts)
+- backend account response and param validation:
+  - [account.ts](/apps/api/src/validation/account.ts)
+- request validation middleware:
+  - [account-validation-middleware.ts](/apps/api/src/middleware/account-validation-middleware.ts)
+
+This keeps request parsing and response validation explicit and typed.
 
 ## Why This Is Reusable
 
-The code supports adding new settings of an already supported type by changing the model and schema rather than manually wiring new JSX.
+The solution is reusable in two important ways.
 
-For those cases, the usual extension points are:
+### 1. New settings of supported types are cheap to add
 
-- [types/account.ts](types/account.ts)
-- [config/accountSettings.ts](config/accountSettings.ts)
-- [config/mockData.ts](config/mockData.ts)
-- [app/hooks/useAccountSettings.ts](app/hooks/useAccountSettings.ts)
+For an already supported field type, the main extension points are:
 
-Once those are updated, rendering, read-only display, and validation follow automatically for supported types because they are driven by the same schema.
+- [account.ts](/shared/src/types/account.ts)
+- [accountSettings.ts](/apps/web/config/accountSettings.ts)
+- [mock-accounts.ts](/apps/api/src/data/mock-accounts.ts)
+- [account-settings-schema.ts](/shared/src/schemas/account-settings-schema.ts)
+- [account-settings.ts](/apps/web/lib/account-settings.ts)
 
-This is the main reason the implementation aligns with the requirement that settings should be defined in code and the UI should adapt automatically.
+That is a good signal for maintainability because adding a field does not require editing the UI in multiple unrelated places.
+
+### 2. Persistence can evolve independently
+
+The backend can later replace:
+
+- [mock-account-repository.ts](/apps/api/src/repositories/mock-account-repository.ts)
+
+with a DB-backed repository while keeping:
+
+- routes
+- controllers
+- services
+- frontend API integration
+
+mostly unchanged.
 
 ## Tradeoffs
 
-The main tradeoffs were:
+The main tradeoffs in the current solution are:
 
-- `localStorage` instead of backend persistence
-- explicit support for a fixed set of field types
-- schema-driven rendering instead of per-setting components
-- a small client boundary rather than making the whole page interactive
+- mock repository instead of database persistence
+- explicit support for a controlled set of field types
+- server-side data loading for account fetches, with client-side mutation for saves
+- a lightweight full-stack implementation rather than a more enterprise-heavy backend framework
 
-The important limitation is that the UI adapts automatically only for supported field types. If a completely new type is introduced, such as `date`, the renderer and validation layer still need to be extended. That is an intentional tradeoff: the system is optimized for scalable addition of fields within a controlled set of field types.
+These tradeoffs were intentional. The assignment scope is small enough that the most important signal is sound structure and reasoning, not maximum framework complexity.
 
-## Technical Reasoning
+## What I Would Do Next
 
-This structure was chosen because it balances simplicity with scalability:
+If I extended this further, the next steps would be:
 
-- it is small enough for an assignment-sized implementation
-- it demonstrates reusable UI architecture rather than hardcoded screens
-- it keeps TypeScript types and field definitions aligned
-- it makes per-account persistence straightforward
-- it leaves a clear path toward backend persistence later
+- replace the mock repository with a DB-backed repository
+- add focused API and form interaction tests
+- improve frontend save/load feedback further with retry flows or inline status components
+- add deployment configuration for the web and API apps
 
-If extended beyond the assignment, the next logical evolution would be replacing `localStorage` with a backend while keeping the same schema-driven UI layer.
+## Summary
+
+The core idea behind the implementation is to keep the settings system schema-driven, typed, and extendable while introducing a backend structure that is realistic without being over-engineered for the size of the assignment.
+
+That balance is what guided the main choices:
+
+- schema-driven UI
+- shared domain contract
+- monorepo split
+- layered backend
+- frontend API orchestration separated from UI components

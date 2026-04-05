@@ -1,7 +1,8 @@
 import type { RequestHandler } from "express";
 
 import {
-  AccountParams,
+  type AccountParams,
+  type AccountSettingsPatchInput,
   accountParamsSchema,
   accountSettingsPatchSchema,
 } from "../validation/account";
@@ -28,7 +29,8 @@ export const validateAccountParams: RequestHandler<
 
 export const validateAccountSettingsBody: RequestHandler<
   AccountParams,
-  ErrorResponse
+  ErrorResponse,
+  AccountSettingsPatchInput
 > = (request, response, next) => {
   const parsedBody = accountSettingsPatchSchema.safeParse(request.body);
 
@@ -39,5 +41,6 @@ export const validateAccountSettingsBody: RequestHandler<
     return;
   }
 
+  request.body = parsedBody.data;
   next();
 };

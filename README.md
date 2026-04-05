@@ -1,17 +1,22 @@
 # Trivo Technical Assignment
 
-Small account settings application built with Next.js, TypeScript, Material UI, and React Hook Form.
+Account settings application implemented as a small monorepo with:
 
-## Overview
+- `apps/web`: Next.js frontend
+- `apps/api`: Express backend
+- `shared`: shared domain types, constants, and validation schemas
 
-This project implements a reusable account settings UI where:
+The frontend is schema-driven, account-specific, and connected to a typed backend API. The backend currently uses a mock repository as its source of truth, with the architecture intentionally prepared for a later database-backed repository.
 
-- multiple accounts can be selected from a sidebar
-- each account has its own saved settings
-- settings are rendered from a central configuration schema
-- supported field types are handled through one generic form system
+## Highlights
 
-Persistence is implemented with `localStorage` to keep the solution lightweight and aligned with the assignment scope.
+- reusable schema-driven account settings form
+- strict TypeScript across frontend, backend, and shared package
+- account list, single-account, and settings-update APIs
+- frontend connected to backend through a reusable Axios API layer
+- clear separation between UI, loaders, dispatchers, controllers, services, and repositories
+- validation on both the frontend form flow and backend request/response boundaries
+- user-facing loading and error states for account fetch and save flows
 
 ## Tech Stack
 
@@ -20,25 +25,17 @@ Persistence is implemented with `localStorage` to keep the solution lightweight 
 - TypeScript
 - Material UI
 - React Hook Form
-- Tailwind CSS utilities
+- Axios
+- Express
+- Zod
+- npm workspaces
 
-## Features
+## API Endpoints
 
-- account sidebar with mocked data
-- account-specific settings pages
-- schema-driven form rendering
-- edit, cancel, and save flow
-- save-time validation
-- per-account persistence in `localStorage`
-- loading states for route and form content
-
-## Supported Setting Types
-
-- `boolean`
-- `text`
-- `number`
-- `select`
-- `multiselect`
+- `GET /health`
+- `GET /accounts`
+- `GET /accounts/:accountId`
+- `PATCH /accounts/:accountId/settings`
 
 ## Getting Started
 
@@ -48,85 +45,128 @@ Install dependencies:
 npm install
 ```
 
-Start the development server:
+Run both frontend and backend:
 
 ```bash
 npm run dev
 ```
 
-Run lint:
+Run only the frontend:
 
 ```bash
-npm run lint
+npm run dev:web
 ```
 
-Run type-check:
+Run only the backend:
 
 ```bash
-npx tsc --noEmit
+npm run dev:api
 ```
+
+Type-check the frontend:
+
+```bash
+npm run typecheck:web
+```
+
+Type-check the backend:
+
+```bash
+npm run typecheck -w apps/api
+```
+
+Lint the frontend:
+
+```bash
+npm run lint:web
+```
+
+## Local URLs
+
+- frontend: `http://localhost:3000`
+- backend: `http://localhost:9000`
+
+The frontend Axios client uses:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:9000
+```
+
+If this variable is not set, the frontend falls back to `http://localhost:9000`.
 
 ## Project Structure
 
 ```text
-app/
-  components/
-    form/
-      AccountSettingEditor.tsx
-      AccountSettingField.tsx
-      AccountSettingsActions.tsx
-      AccountSettingsForm.tsx
-      AccountSettingsLoading.tsx
-      AccountSettingsPanel.tsx
-    ui/
-      AccountSidebar.tsx
-      Button.tsx
-      SidebarListItem.tsx
-  dashboard/
-    [accountId]/
-      loading.tsx
-      page.tsx
-    layout.tsx
-    page.tsx
-  hooks/
-    useAccountSettings.ts
-    useAccountSettingsLoading.ts
-    useAccountSettingValidation.ts
-    useIsHydrated.ts
-  layout.tsx
-  page.tsx
-config/
-  accountSettings.ts
-  mockData.ts
-types/
-  account.ts
+apps/
+  web/
+    app/
+      components/
+        form/
+        ui/
+      dashboard/
+      dispatchers/
+      hooks/
+      loaders/
+    config/
+      accountSettings.ts
+    lib/
+      account-settings.ts
+      api/
+        account-api.ts
+        callAPI.ts
+    axiosInstance.ts
+    theme.ts
+    types/
+      account.ts
+  api/
+    src/
+      config/
+      controllers/
+      data/
+      mappers/
+      middleware/
+      repositories/
+      routes/
+      services/
+      validation/
+      app.ts
+      server.ts
+shared/
+  src/
+    constants/
+    schemas/
+    types/
 ```
 
-## Extending Settings
+## Adding New Settings
 
 For a new setting that uses an already supported field type, update:
 
-- [types/account.ts](types/account.ts)
+- [account.ts](/shared/src/types/account.ts)
   - add the field to `IAccountSettings`
-- [config/accountSettings.ts](config/accountSettings.ts)
+- [accountSettings.ts](/apps/web/config/accountSettings.ts)
   - add the field definition to `ACCOUNT_SETTINGS_SCHEMA`
   - add options and validation metadata if needed
-- [config/mockData.ts](config/mockData.ts)
-  - add the field to each mocked account
-- [app/hooks/useAccountSettings.ts](app/hooks/useAccountSettings.ts)
-  - include the field in `extractSettings`
+- [mock-accounts.ts](/apps/api/src/data/mock-accounts.ts)
+  - add the field to each backend mock account
+- [account-settings.ts](/apps/web/lib/account-settings.ts)
+  - include the field in `extractAccountSettings`
+- [account-settings-schema.ts](/shared/src/schemas/account-settings-schema.ts)
+  - add the field to backend/shared validation if it belongs to the editable settings payload
 
 For a brand new field type such as `date`, also extend:
 
-- [app/components/form/AccountSettingEditor.tsx](app/components/form/AccountSettingEditor.tsx)
-- [app/components/form/AccountSettingField.tsx](app/components/form/AccountSettingField.tsx)
-- [app/hooks/useAccountSettingValidation.ts](app/hooks/useAccountSettingValidation.ts)
+- [AccountSettingEditor.tsx](/apps/web/app/components/form/AccountSettingEditor.tsx)
+- [AccountSettingField.tsx](/apps/web/app/components/form/AccountSettingField.tsx)
+- [useAccountSettingValidation.ts](/apps/web/app/hooks/useAccountSettingValidation.ts)
 
-## Notes
+## Current Tradeoffs
 
-- The runtime source of truth in this version is `localStorage`.
-- The UI adapts automatically for new settings of already supported field types.
-- New field types require renderer support, which is an intentional tradeoff for this scope.
+- The backend currently uses a mock repository instead of a database.
+- The UI adapts automatically for supported field types, but introducing a completely new field type still requires renderer support.
+- API reads for sidebar and account detail are server-side in Next.js, while settings updates are client-triggered.
+
+This was a deliberate scope decision: the solution demonstrates a maintainable full-stack structure first, while keeping a clean path to replace the mock repository with a DB-backed repository later.
 
 ## AI Usage Note
 
@@ -135,20 +175,20 @@ For a brand new field type such as `date`, also extend:
 - What they were used for:
   - small implementation suggestions
   - review support
-  - documentation phrasing and refinement
-  - sanity-checking extension paths for new settings and validation
+  - documentation refinement
+  - sanity-checking architecture and extension paths
 - Primarily my own implementation and decisions:
-  - structuring the frontend implementation around the assignment requirements
-  - translating the required schema-driven form idea into the actual component and hook structure
-  - implementing how the supported field types are rendered and validated in the UI
-  - deciding how save-time validation should fit into the existing reusable form structure
-  - organizing the code and documentation so the extension points are clear
+  - overall solution structure
+  - schema-driven form design
+  - monorepo split between web, api, and shared
+  - API boundaries, layering, and extension points
+  - how frontend and backend should integrate for this assignment scope
 - Review and modification:
-  - most of the implementation and writing were done by me
-  - any AI-generated suggestions or code were reviewed carefully and adjusted before being used
-  - AI output was used only as support, not as the source of architectural or product decisions
+  - the implementation and final decisions were made by me
+  - AI suggestions were reviewed critically and adjusted before use
+  - AI was used as support, not as the source of core architectural decisions
 - Representative prompt workflows:
-  - review this form implementation and suggest small improvements
-  - help add save-time validation without breaking the schema-driven approach
-  - suggest a cleaner way to refactor validation logic into a reusable hook
-  - help refine README and approach-note wording for the submission
+  - review this implementation and suggest small improvements
+  - help refine validation and error handling without breaking the current architecture
+  - suggest cleaner naming and separation of concerns
+  - help improve README and approach-note wording for submission clarity
