@@ -14,10 +14,10 @@ export type TimezoneValue =
 
 export interface IAccountSettings {
   notifications: boolean;
-  daily_email_limit: number;
-  support_email: string;
+  dailyEmailLimit: number;
+  supportEmail: string;
   timezone: TimezoneValue;
-  allowed_channels: ChannelValue[];
+  allowedChannels: ChannelValue[];
 }
 
 export interface IAccount {

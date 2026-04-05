@@ -4,8 +4,8 @@ export const extractAccountSettings = (
   account: FullAccountData,
 ): IAccountSettings => ({
   notifications: account.notifications,
-  support_email: account.support_email,
-  daily_email_limit: account.daily_email_limit,
+  supportEmail: account.supportEmail,
+  dailyEmailLimit: account.dailyEmailLimit,
   timezone: account.timezone,
-  allowed_channels: account.allowed_channels,
+  allowedChannels: account.allowedChannels,
 });

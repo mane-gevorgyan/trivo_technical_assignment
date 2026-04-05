@@ -62,10 +62,10 @@ type MultiSelectSettingDefinition<
 
 export type AccountSettingDefinition =
   | BooleanSettingDefinition<"notifications">
-  | TextSettingDefinition<"support_email">
-  | NumberSettingDefinition<"daily_email_limit">
+  | TextSettingDefinition<"supportEmail">
+  | NumberSettingDefinition<"dailyEmailLimit">
   | SelectSettingDefinition<"timezone", TimezoneValue>
-  | MultiSelectSettingDefinition<"allowed_channels", ChannelValue>;
+  | MultiSelectSettingDefinition<"allowedChannels", ChannelValue>;
 
 export const ACCOUNT_SETTINGS_SCHEMA: AccountSettingDefinition[] = [
   {
@@ -75,7 +75,7 @@ export const ACCOUNT_SETTINGS_SCHEMA: AccountSettingDefinition[] = [
     type: "boolean",
   },
   {
-    key: "support_email",
+    key: "supportEmail",
     label: "Support Email",
     description: "Primary support address used for account communication.",
     type: "text",
@@ -86,7 +86,7 @@ export const ACCOUNT_SETTINGS_SCHEMA: AccountSettingDefinition[] = [
     patternMessage: "Enter a valid email address.",
   },
   {
-    key: "daily_email_limit",
+    key: "dailyEmailLimit",
     label: "Daily Email Limit",
     description: "Maximum number of automated emails sent per day.",
     type: "number",
@@ -104,7 +104,7 @@ export const ACCOUNT_SETTINGS_SCHEMA: AccountSettingDefinition[] = [
     options: TIMEZONE_OPTIONS,
   },
   {
-    key: "allowed_channels",
+    key: "allowedChannels",
     label: "Allowed Channels",
     description: "Choose which delivery channels this account can use.",
     type: "multiselect",

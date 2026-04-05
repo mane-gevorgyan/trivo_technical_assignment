@@ -101,7 +101,7 @@ const AccountSettingEditor = ({
         }
 
         const selectedValues = (field.value ??
-          []) as IAccountSettings["allowed_channels"];
+          []) as IAccountSettings["allowedChannels"];
 
         return (
           <Stack spacing={1}>

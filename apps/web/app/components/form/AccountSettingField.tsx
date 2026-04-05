@@ -28,7 +28,7 @@ const renderReadOnlyValue = (
   }
 
   if (setting.type === "multiselect") {
-    const selectedValues = value as IAccountSettings["allowed_channels"];
+    const selectedValues = value as IAccountSettings["allowedChannels"];
 
     if (selectedValues.length === 0) {
       return (

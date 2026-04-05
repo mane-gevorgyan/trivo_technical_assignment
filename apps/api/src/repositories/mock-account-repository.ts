@@ -2,20 +2,8 @@ import type { FullAccountData } from "@trivo/shared/types/account";
 import type { AccountSettingsPatchInput } from "../validation/account";
 
 import { MOCK_ACCOUNTS } from "../data/mock-accounts";
+import { mergeAccountSettingsPatch } from "./helpers/account-repository-helpers";
 import type { AccountRepository } from "./account-repository";
-
-const mergeAccountSettingsPatch = (
-  account: FullAccountData,
-  settingsPatch: AccountSettingsPatchInput,
-): FullAccountData => ({
-  ...account,
-  notifications: settingsPatch.notifications ?? account.notifications,
-  support_email: settingsPatch.support_email ?? account.support_email,
-  daily_email_limit:
-    settingsPatch.daily_email_limit ?? account.daily_email_limit,
-  timezone: settingsPatch.timezone ?? account.timezone,
-  allowed_channels: settingsPatch.allowed_channels ?? account.allowed_channels,
-});
 
 export class MockAccountRepository implements AccountRepository {
   async getAccounts(): Promise<FullAccountData[]> {

@@ -21,10 +21,10 @@ export const fullAccountDataSchema = z.object({
   id: z.uuid(),
   name: z.string().trim().min(1),
   notifications: z.boolean(),
-  daily_email_limit: z.number().int().nonnegative(),
-  support_email: z.email(),
+  dailyEmailLimit: z.number().int().nonnegative(),
+  supportEmail: z.email(),
   timezone: z.enum(timezoneValues),
-  allowed_channels: z.array(z.enum(channelValues)),
+  allowedChannels: z.array(z.enum(channelValues)),
 });
 
 export const sidebarAccountsSchema = z.array(accountSummarySchema);
