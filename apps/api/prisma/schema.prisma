@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id       String          @id @db.Uuid
+  name     String
+  settings AccountSettings?
+
+  @@map("accounts")
+}
+
+model AccountSettings {
+  accountId       String   @id @db.Uuid
+  notifications   Boolean
+  supportEmail    String
+  dailyEmailLimit Int
+  timezone        String
+  allowedChannels String[]
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("account_settings")
+}
