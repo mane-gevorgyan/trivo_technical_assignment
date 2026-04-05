@@ -48,6 +48,13 @@ Install dependencies:
 npm install
 ```
 
+If you are running the API with `DATA_SOURCE=db`, initialize Prisma and seed the database before starting the app:
+
+```bash
+npm run db:generate:api
+npm run dev
+```
+
 ### Fastest Start: Mock Mode
 
 This is the easiest path for reviewers and new users. It requires no local database.
@@ -96,7 +103,7 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5433/trivo_assignment?sch
 npm run db:setup:api
 ```
 
-4. Start the apps:
+4. Start the apps after the database setup completes:
 
 ```bash
 npm run dev
